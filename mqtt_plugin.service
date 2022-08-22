@@ -1,0 +1,14 @@
+[Unit]
+Description=Pywaggle Asynchronous Callback
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=root
+Restart=always
+RestartSec=1
+ExecStart=/usr/bin/python3 /opt/pywaggle/mqtt_plugin.py
+
+[Install]
+WantedBy=multi-user.target
