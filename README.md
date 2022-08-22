@@ -56,9 +56,7 @@ sudo gateway-config
 ### 5 Configure WIFI
 - Select "1 Enable AP Mode/Disable Client Mode"
 ## Configure RPI System
-- Reboot RPIv4, plug in ethernet cable, and execute config commands in BASH:
 ```
-sudo shutdown -r now
 sudo raspi-config
 # This opens a configuration menu
 ```
@@ -145,4 +143,14 @@ WantedBy=multi-user.target
 sudo ln -s /opt/pywaggle/mqtt_plugin.service /etc/systemd/system/mqtt_plugin.service
 sudo systemctl enable mqtt_plugin
 sudo shutdown -r now
+```
+## Check installation
+- Login with 'sagelora' credentials
+```
+sudo systemctl status mosquitto
+sudo systemctl status postgresql
+sudo systemctl status redis-server
+sudo systemctl status chirpstack-gateway-bridge
+sudo systemctl status chirpstack-network-server
+sudo systemctl status chirpstack-application-server
 ```
