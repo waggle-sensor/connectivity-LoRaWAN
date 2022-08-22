@@ -101,6 +101,16 @@ sudo ln -s /opt/pywaggle/mqtt_plugin.service /etc/systemd/system/mqtt_plugin.ser
 sudo systemctl enable mqtt_plugin
 sudo shutdown -r now
 ```
+## Check installation
+- Login with 'sagelora' credentials
+```
+sudo systemctl status mosquitto
+sudo systemctl status postgresql
+sudo systemctl status redis-server
+sudo systemctl status chirpstack-gateway-bridge
+sudo systemctl status chirpstack-network-server
+sudo systemctl status chirpstack-application-server
+```
 
 # Manual Build Using BASH plus Configuration Menus
 
