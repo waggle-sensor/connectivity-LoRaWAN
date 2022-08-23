@@ -10,14 +10,16 @@ sudo dd bs=4M if=/path/to/filename.img of=/path/to/device oflag=sync
 ```
 - Insert SD Micro into RPIv4 and power on device
 - Select keyboard layout "Other", then "English (US)", then "English (US)"
+- Enter new username: "sagelora", then set a password: "ArgonneNatlLab"
 
 ## Automagic Install Script
 - Execute commands in BASH:
 ```
 sudo apt -y install git
 sudo mkdir /opt/pywaggle
-sudo git https://github.com/waggle-sensor/connectivity-LoRaWAN.git /opt/Pywaggle
+sudo git clone https://github.com/waggle-sensor/connectivity-LoRaWAN.git /opt/pywaggle
 cd /opt/pywaggle
+sudo chmod +x auto_install.sh
 sudo ./auto_install.sh
 ```
 - RPI will reboot at the end of the script
@@ -28,6 +30,7 @@ sudo ./auto_install.sh
 sudo systemctl status mosquitto
 sudo systemctl status postgresql
 sudo systemctl status redis-server
+sudo systemctl status create_ap
 sudo systemctl status chirpstack-gateway-bridge
 sudo systemctl status chirpstack-network-server
 sudo systemctl status chirpstack-application-server
@@ -45,6 +48,8 @@ sudo dd bs=4M if=/path/to/filename.img of=/path/to/device oflag=sync
 ```
 - Insert SD Micro into RPIv4 and power on device
 - Select keyboard layout "Other", then "English (US)", then "English (US)"
+- Enter new username: "sagelora", then set a password: "ArgonneNatlLab"
+
 ## Localisation
 - Execute commands in BASH:
 ```
