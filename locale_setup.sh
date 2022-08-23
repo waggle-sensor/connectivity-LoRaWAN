@@ -9,7 +9,10 @@ export LANGUAGE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LC_CTYPE=en_US.UTF-8
-sudo locale-gen en_US.UTF-8
+sudo update-locale --no-checks "LANG=en_US.UTF-8 UTF-8"
+sudo update-locale --no-checks "LANGUAGE=en_US.UTF-8 UTF-8"
+sudo update-locale --no-checks "LC_ALL=en_US.UTF-8 UTF-8"
+sudo update-locale --no-checks "LC_TYPE=en_US.UTF-8 UTF-8"
 sudo dpkg-reconfigure -f noninteractive locales
 
 # Change keyboard layout
