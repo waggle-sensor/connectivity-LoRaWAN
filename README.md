@@ -12,7 +12,7 @@ sudo dd bs=4M if=/path/to/filename.img of=/path/to/device oflag=sync
 - Select keyboard layout "Other", then "English (US)", then "English (US)"
 - Enter new username: "sagelora", then set a password: "ArgonneNatlLab"
 
-## Automagic Install Script
+## Download Installation Scripts
 - Execute commands in BASH:
 ```
 sudo apt -y install git
@@ -20,6 +20,16 @@ sudo mkdir /opt/pywaggle
 sudo git clone https://github.com/waggle-sensor/connectivity-LoRaWAN.git /opt/pywaggle
 cd /opt/pywaggle
 sudo chmod +x auto_install.sh
+```
+
+## Configure System Locales
+```
+sudo ./locale_setup.sh
+```
+- RPI will reboot at the end of the script
+
+### Install Dependencies and Software
+```
 sudo ./auto_install.sh
 ```
 - RPI will reboot at the end of the script
