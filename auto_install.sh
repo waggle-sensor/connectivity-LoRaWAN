@@ -34,7 +34,7 @@ exit
 
 sudo apt update
 sudo apt -y upgrade
-sudo apt -y install git apt-transport-https python3-pip
+sudo apt -y install apt-transport-https python3-pip
 sudo pip3 install paho-mqtt pywaggle[all]
 
 # Install RAK software
@@ -64,7 +64,7 @@ sudo invoke-rc.d ssh start
 
 # Enable Serial
 
-sudo sh -c "echo '$ enable_uart=1' /boot/config.txt"
+sudo sh -c "echo 'enable_uart=1' >> /boot/config.txt"
 sudo cp /boot/cmdline.txt /opt/pywaggle/cmdline.bak
 sudo sed -i 's/console=serial0,115200 //g' /opt/pywaggle/cmdline.bak
 sudo rm /boot/cmdline.txt
@@ -83,8 +83,6 @@ sudo sed -i -e "s/verysecret/$JWT/g" /etc/chirpstack-application-server/chirpsta
 # Create Pywaggle plugin
 
 sudo mkdir /var/log/pywaggle
-sudo mkdir /opt/pywaggle
-git clone https://github.com/waggle-sensor/connectivity-LoRaWAN.git ~/opt/pywaggle
 sudo chmod +x /opt/pywaggle/mqtt_plugin.py
 
 # Create pywaggle service

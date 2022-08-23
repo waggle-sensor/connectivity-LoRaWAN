@@ -14,9 +14,11 @@ sudo dd bs=4M if=/path/to/filename.img of=/path/to/device oflag=sync
 ## Automagic Install Script
 - Execute commands in BASH:
 ```
-# Change system language to US
-sudo wget https://raw.githubusercontent.com/waggle-sensor/connectivity-LoRaWAN/Dev/auto_install.sh?token=GHSAT0AAAAAABX5MFQ6A3TDLYJSZAZZVDGKYYD42UQ -P ~/Downloads
-./auto_install.sh
+sudo apt -y install git
+sudo mkdir /opt/pywaggle
+sudo git https://github.com/waggle-sensor/connectivity-LoRaWAN.git /opt/Pywaggle
+cd /opt/pywaggle
+sudo ./auto_install.sh
 ```
 - RPI will reboot at the end of the script
 
@@ -56,7 +58,6 @@ sudo update-locale --no-checks "LANG=en_US.UTF-8 UTF-8"
 sudo dpkg-reconfigure -f noninteractive locales
 # Change keyboard layout
 sudo sed -i 's/XKBMODEL="pc105"/XKBMODEL="pc104"/g' /etc/default/keyboard
-sudo nano /etc/default/keyboard
 sudo dpkg-reconfigure -f noninteractive keyboard-configuration
 sudo invoke-rc.d keyboard-setup start
 sudo setsid sh -c 'exec setupcon -k --force <> /dev/tty1 >&0 2>&1'
@@ -103,7 +104,7 @@ sudo ssh-keygen -A
 sudo update-rc.d ssh enable
 sudo invoke-rc.d ssh start
 # Enable Serial
-sudo sh -c "echo '$ enable_uart=1' /boot/config.txt"
+sudo sh -c "echo 'enable_uart=1' >> /boot/config.txt"
 sudo cp /boot/cmdline.txt /opt/pywaggle/cmdline.bak
 sudo sed -i 's/console=serial0,115200 //g' /opt/pywaggle/cmdline.bak
 sudo rm /boot/cmdline.txt
