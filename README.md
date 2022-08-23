@@ -1,3 +1,36 @@
+# Fast Build Using BASH Script
+
+## Install Operating System
+- Download latest Raspi Lite Arm 64 image from: [https://downloads.raspberrypi.org/raspios_lite_arm64/images/](https://downloads.raspberrypi.org/raspios_lite_arm64/images/)
+- Determine path to SD Micro and manually build image in BASH:
+```
+sudo lsblk
+sudo dd bs=4M if=/path/to/filename.img of=/path/to/device oflag=sync
+// e.g.: sudo dd bs=4M if=/mnt/data/02--PROJECTS/U/University-of-Oregon-Research/11--LORA/2022-04-04-raspios-bullseye-arm64-lite.img of=/dev/sda oflag=sync
+```
+- Insert SD Micro into RPIv4 and power on device
+- Select keyboard layout "Other", then "English (US)", then "English (US)"
+
+## Automagic Install Script
+- Execute commands in BASH:
+```
+# Change system language to US
+sudo wget https://raw.githubusercontent.com/waggle-sensor/connectivity-LoRaWAN/Dev/auto_install.sh?token=GHSAT0AAAAAABX5MFQ6A3TDLYJSZAZZVDGKYYD42UQ -P ~/Downloads
+./auto_install.sh
+```
+- RPI will reboot at the end of the script
+
+## Check Installation
+- Login with 'sagelora' credentials
+```
+sudo systemctl status mosquitto
+sudo systemctl status postgresql
+sudo systemctl status redis-server
+sudo systemctl status chirpstack-gateway-bridge
+sudo systemctl status chirpstack-network-server
+sudo systemctl status chirpstack-application-server
+```
+
 # Manual Build Using Only BASH
 
 ## Install Operating System
