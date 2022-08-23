@@ -5,10 +5,11 @@
 
 sudo sed -i 's/en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/g' /etc/locale.gen
 sudo sed -i 's/# en_US.UTF-8 utf-8/en_US.UTF-8 utf-8/g' /etc/locale.gen
-export LC_ALL=C
-export LANG=C
-sudo update-locale --no-checks LANG
-sudo update-locale --no-checks "LANG=en_US.UTF-8 UTF-8"
+export LANGUAGE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+sudo locale-gen en_US.UTF-8
 sudo dpkg-reconfigure -f noninteractive locales
 
 # Change keyboard layout

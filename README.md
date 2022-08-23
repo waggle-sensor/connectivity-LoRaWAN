@@ -19,6 +19,7 @@ sudo apt -y install git
 sudo mkdir /opt/pywaggle
 sudo git clone https://github.com/waggle-sensor/connectivity-LoRaWAN.git /opt/pywaggle
 cd /opt/pywaggle
+sudo chmod +x locale_setup.sh
 sudo chmod +x auto_install.sh
 ```
 
@@ -30,6 +31,7 @@ sudo ./locale_setup.sh
 
 ### Install Dependencies and Software
 ```
+cd /opt/pywaggle
 sudo ./auto_install.sh
 ```
 - RPI will reboot at the end of the script
