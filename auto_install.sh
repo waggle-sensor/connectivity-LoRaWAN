@@ -5,7 +5,7 @@
 
 sudo apt update
 sudo apt -y upgrade
-sudo apt -y install apt-transport-https python3-pip
+sudo apt -y install apt-transport-https python3-pip iptables
 sudo pip3 install paho-mqtt pywaggle[all]
 
 # Install RAK software
