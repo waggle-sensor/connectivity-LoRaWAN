@@ -5,7 +5,6 @@
 
 sudo sed -i 's/en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/g' /etc/locale.gen
 sudo sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
-sudo locale-gen "en_US.UTF-8"
 export LC_ALL=C
 export LANG=C
 sudo update-locale --no-checks LANG
