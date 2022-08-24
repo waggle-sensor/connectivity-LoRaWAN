@@ -93,7 +93,7 @@ exit
 ```
 sudo apt update
 sudo apt -y upgrade
-sudo apt -y install git apt-transport-https python3-pip
+sudo apt -y install git apt-transport-https python3-pip iptables
 sudo pip3 install paho-mqtt pywaggle[all]
 ```
 ## Install RAK Software
@@ -195,7 +195,7 @@ sudo raspi-config
 ```
 sudo apt update
 sudo apt upgrade
-sudo apt install git apt-transport-https python3-pip
+sudo apt install git apt-transport-https python3-pip iptables
 ```
 ### Python Dependencies:
 - Execute Python package manager commands in BASH:
