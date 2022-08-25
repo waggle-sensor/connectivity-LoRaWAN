@@ -12,16 +12,21 @@ sudo pip3 install paho-mqtt pywaggle[all]
 
 git clone https://github.com/RAKWireless/rak_common_for_gateway.git ~/Downloads/rak_common_for_gateway
 cd ~/Downloads/rak_common_for_gateway
-printf '7' | sudo ./install.sh
+printf 7 | sudo ./install.sh
 
 # Set LoRaWAN to US channel plan
 
+sudo cp /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf/global_conf.us_902_928.json /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json
+sudo sed -i "s/^.*server_address.*$/\t\"server_address\": \"127.0.0.1\",/" /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json
 sudo cp /etc/chirpstack-network-server/chirpstack-network-server.us_902_928.toml /etc/chirpstack-network-server/chirpstack-network-server.toml
+sudo systemctl restart chirpstack-gateway-bridge
+sudo systemctl restart chirpstack-network-server
+sudo systemctl restart chirpstack-application-server
+sudo systemctl stop ttn-gateway
 
 # Configure RAK to access point
 
 sudo systemctl enable create_ap
-sudo echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1" > /etc/wpa_supplicant/wpa_supplicant.conf
 
 # Set RPI to console login
 
@@ -40,7 +45,7 @@ sudo sh -c "echo 'enable_uart=1' >> /boot/config.txt"
 sudo cp /boot/cmdline.txt /opt/pywaggle/cmdline.bak
 sudo sed -i 's/console=serial0,115200 //g' /opt/pywaggle/cmdline.bak
 sudo rm /boot/cmdline.txt
-sudo mv /opt/pywaggle/cmdline.txt /boot/cmdline.txt
+sudo mv /opt/pywaggle/cmdline.bak /boot/cmdline.txt
 
 # Configure chirpstack network server
 
