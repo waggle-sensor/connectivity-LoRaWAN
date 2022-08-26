@@ -17,12 +17,24 @@ printf 7 | sudo ./install.sh
 # Set LoRaWAN to US channel plan
 
 sudo cp /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf/global_conf.us_902_928.json /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json
-sudo sed -i "s/^.*server_address.*$/\t\"server_address\": \"127.0.0.1\",/" /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json
+## Things Network: Uncomment following line
+#sudo sed -i "s/^.*server_plan.*$/\"server_plan\": \"1\",/" /usr/local/rak/gateway-config-info.json
+## Things Network: Replace 127.0.0.1 with TTN network DNS if required
+sudo sed -i "s/^.*server_address.*$/$(echo "        \"server_address\""): \"127.0.0.1\",/" /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json
 sudo cp /etc/chirpstack-network-server/chirpstack-network-server.us_902_928.toml /etc/chirpstack-network-server/chirpstack-network-server.toml
+## Things Network: Comment following lines
 sudo systemctl restart chirpstack-gateway-bridge
 sudo systemctl restart chirpstack-network-server
 sudo systemctl restart chirpstack-application-server
+## Things Network: Uncomment following lines
+# sudo systemctl stop chirpstack-gateway-bridge
+# sudo systemctl stop chirpstack-network-server
+# sudo systemctl stop chirpstack-application-server
+# sudo systemctl disable chirpstack-gateway-bridge
+# sudo systemctl disable chirpstack-network-server
+# sudo systemctl disable chirpstack-application-server
 sudo systemctl stop ttn-gateway
+sudo systemctl start ttn-gateway
 
 # Configure RAK to access point
 
@@ -54,8 +66,8 @@ sudo sh -c "echo '[general]\nlog_level=4' >> /etc/chirpstack-network-server/chir
 # Configure chirpstack application server
 
 sudo sh -c "echo '[general]\nlog_level=4' >> /etc/chirpstack-application-server/chirpstack-application-server.toml"
-JWT="$(openssl rand -base64 32)"
-sudo sed -i -e "s/verysecret/$JWT/g" /etc/chirpstack-application-server/chirpstack-application-server.toml
+# JWT="$(openssl rand -base64 32)"
+sudo sed -i -e "s/verysecret/$(openssl rand -base64 32)/g" /etc/chirpstack-application-server/chirpstack-application-server.toml
 
 # Create Pywaggle plugin
 

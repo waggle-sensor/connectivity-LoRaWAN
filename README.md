@@ -77,7 +77,7 @@ sudo dpkg-reconfigure -f noninteractive locales
 sudo sed -i 's/XKBMODEL="pc105"/XKBMODEL="pc104"/g' /etc/default/keyboard
 sudo dpkg-reconfigure -f noninteractive keyboard-configuration
 sudo invoke-rc.d keyboard-setup start
-sudo setsid sh -c 'exec setupcon -k --force <> /dev/tty1 >&0 2>&1'
+setsid sh -c 'exec setupcon -k --force <> /dev/tty1 >&0 2>&1'
 sudo udevadm trigger --subsystem-match=input --action=change
 # Change Wifi country
 sudo iw reg set US
@@ -106,15 +106,26 @@ printf 7 | sudo ./install.sh
 ## Configure RAK Software
 - Execute the following BASH commands:
 ```
-# Set LoRaWAN to US channel plan
+# Setup LoRaWAN Gateway
 sudo cp /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf/global_conf.us_902_928.json /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json
-sudo sed -i "s/^.*server_address.*$/\t\"server_address\": \"127.0.0.1\",/" /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json
+## Things Network: Uncomment following line
+#sudo sed -i "s/^.*server_plan.*$/\"server_plan\": \"1\",/" /usr/local/rak/gateway-config-info.json
+## Things Network: Replace 127.0.0.1 with TTN network DNS if required
+sudo sed -i "s/^.*server_address.*$/$(echo "        \"server_address\""): \"127.0.0.1\",/" /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json
 sudo cp /etc/chirpstack-network-server/chirpstack-network-server.us_902_928.toml /etc/chirpstack-network-server/chirpstack-network-server.toml
-# Process services
+## Things Network: Comment following lines
 sudo systemctl restart chirpstack-gateway-bridge
 sudo systemctl restart chirpstack-network-server
 sudo systemctl restart chirpstack-application-server
+## Things Network: Uncomment following lines
+# sudo systemctl stop chirpstack-gateway-bridge
+# sudo systemctl stop chirpstack-network-server
+# sudo systemctl stop chirpstack-application-server
+# sudo systemctl disable chirpstack-gateway-bridge
+# sudo systemctl disable chirpstack-network-server
+# sudo systemctl disable chirpstack-application-server
 sudo systemctl stop ttn-gateway
+sudo systemctl start ttn-gateway
 # Configure RAK to access point
 sudo systemctl enable create_ap
 ```
@@ -142,8 +153,7 @@ sudo mv /opt/pywaggle/cmdline.txt /boot/cmdline.txt
 sudo sh -c "echo '[general]\nlog_level=4' >> /etc/chirpstack-network-server/chirpstack-network-server.toml"
 # Configure chirpstack application server
 sudo sh -c "echo '[general]\nlog_level=4' >> /etc/chirpstack-application-server/chirpstack-application-server.toml"
-JWT="$(openssl rand -base64 32)"
-sudo sed -i -e "s/verysecret/$JWT/g" /etc/chirpstack-application-server/chirpstack-application-server.toml
+sudo sed -i -e "s/verysecret/$(openssl rand -base64 32)/g" /etc/chirpstack-application-server/chirpstack-application-server.toml
 ```
 ## Create Pywaggle Plugin
 - Create pywaggle directories and download Python file in BASH:
@@ -271,6 +281,7 @@ log_level=4
 
 [application_server.external_api]
 # jwt_secret="verysecret" (the fourth key below the tag)
+# Use output from openssl rand command (instructions above)
 # The following is an example of a random base64 32-character key
 jwt_secret="TWpC5KJuWmoJ+fRWTLynCL/gfjur+TiPpvH5fd3JTmk="
 ```

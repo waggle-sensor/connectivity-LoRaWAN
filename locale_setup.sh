@@ -16,7 +16,7 @@ sudo dpkg-reconfigure -f noninteractive locales
 sudo sed -i 's/XKBMODEL="pc105"/XKBMODEL="pc104"/g' /etc/default/keyboard
 sudo dpkg-reconfigure -f noninteractive keyboard-configuration
 sudo invoke-rc.d keyboard-setup start
-sudo setsid sh -c 'exec setupcon -k --force <> /dev/tty1 >&0 2>&1'
+setsid sh -c 'exec setupcon -k --force <> /dev/tty1 >&0 2>&1'
 sudo udevadm trigger --subsystem-match=input --action=change
 
 # Change Wifi country
