@@ -1,340 +1,368 @@
-# Fast Build Using BASH Script
+# Waggle LoRaWAN Usage Instructions
 
-## Install Operating System
-- Download latest Raspi Lite Arm 64 image from: [https://downloads.raspberrypi.org/raspios_lite_arm64/images/](https://downloads.raspberrypi.org/raspios_lite_arm64/images/)
-- Determine path to SD Micro and manually build image in BASH:
-```
-sudo lsblk
-sudo dd bs=4M if=/path/to/filename.img of=/path/to/device oflag=sync
-// e.g.: sudo dd bs=4M if=/mnt/data/02--PROJECTS/U/University-of-Oregon-Research/11--LORA/2022-04-04-raspios-bullseye-arm64-lite.img of=/dev/sda oflag=sync
-```
-- Insert SD Micro into RPIv4 and power on device
-- Select keyboard layout "Other", then "English (US)", then "English (US)"
-- Enter new username: "sagelora", then set a password: "ArgonneNatlLab"
+The [Waggle Edge Stack (WES)](https://github.com/waggle-sensor/waggle-edge-stack) has support for LoRaWAN devices using the [chirpstack.io](https://www.chirpstack.io/docs/index.html) stack.
 
-## Download Installation Scripts
-- Execute commands in BASH:
-```
-sudo apt -y install git
-sudo mkdir /opt/pywaggle
-sudo git clone https://github.com/waggle-sensor/connectivity-LoRaWAN.git /opt/pywaggle
-cd /opt/pywaggle
-sudo chmod +x locale_setup.sh
-sudo chmod +x auto_install.sh
-```
+**Table of Contents**
+- [Waggle LoRaWAN Usage Instructions](#waggle-lorawan-usage-instructions)
+  - [Enabling WES access to the RAK concentrator](#enabling-wes-access-to-the-rak-concentrator)
+  - [Configuring the WES LoraWAN](#configuring-the-wes-lorawan)
+    - [1. Identify the `wes-chirpstack-server` service address](#1-identify-the-wes-chirpstack-server-service-address)
+    - [2. `ssh` proxy connect to the Waggle node](#2-ssh-proxy-connect-to-the-waggle-node)
+    - [3. Open the Chirpstack Web UI in a browser](#3-open-the-chirpstack-web-ui-in-a-browser)
+    - [4. Connect to the `wes-gateway`](#4-connect-to-the-wes-gateway)
+    - [5. Add the Application](#5-add-the-application)
+    - [6. Creating Device Profiles from the built-in templates](#6-creating-device-profiles-from-the-built-in-templates)
+    - [7. Add Devices to the `wes-application`](#7-add-devices-to-the-wes-application)
+      - [_OTAA Device Activation_](#otaa-device-activation)
+      - [_ABP Device Activation_](#abp-device-activation)
+    - [8. Access LoRaWAN Data using test `python` app](#8-access-lorawan-data-using-test-python-app)
+  - [Adding Custom Device Profiles](#adding-custom-device-profiles)
+    - [Add the 'ABP' device profile](#add-the-abp-device-profile)
+    - [Add the 'OTAA' device profile](#add-the-otaa-device-profile)
 
-## Configure System Locales
-```
-sudo ./locale_setup.sh
-```
-- RPI will reboot at the end of the script
 
-### Install Dependencies and Software
-```
-cd /opt/pywaggle
-sudo ./auto_install.sh
-```
-- RPI will reboot at the end of the script
+## Enabling WES access to the RAK concentrator
 
-## Check Installation
-- Login with 'sagelora' credentials
-```
-sudo systemctl status mosquitto
-sudo systemctl status postgresql
-sudo systemctl status redis-server
-sudo systemctl status create_ap
-sudo systemctl status chirpstack-gateway-bridge
-sudo systemctl status chirpstack-network-server
-sudo systemctl status chirpstack-application-server
-```
+In order for the RAK concentrator (Model: RAK7248, Module: [RAK2287](https://store.rakwireless.com/products/rak2287-lpwan-gateway-concentrator-module?variant=41826859385030)) to be accessed by the WES Chirpstack the [Waggle Node's](https://docs.waggle-edge.ai/docs/about/architecture#waggle-nodes) RPi needs to be properly `labeled` within Kubernetes.
 
-# Manual Build Using Only BASH
+> Note: this will automatically be done in a later update to https://github.com/waggle-sensor/wes-device-labeler but must be done manually for now.
 
-## Install Operating System
-- Download latest Raspi Lite Arm 64 image from: [https://downloads.raspberrypi.org/raspios_lite_arm64/images/](https://downloads.raspberrypi.org/raspios_lite_arm64/images/)
-- Determine path to SD Micro and manually build image in BASH:
-```
-sudo lsblk
-sudo dd bs=4M if=/path/to/filename.img of=/path/to/device oflag=sync
-// e.g.: sudo dd bs=4M if=/mnt/data/02--PROJECTS/U/University-of-Oregon-Research/11--LORA/2022-04-04-raspios-bullseye-arm64-lite.img of=/dev/sda oflag=sync
-```
-- Insert SD Micro into RPIv4 and power on device
-- Select keyboard layout "Other", then "English (US)", then "English (US)"
-- Enter new username: "sagelora", then set a password: "ArgonneNatlLab"
+To manually apply the `label` perform the following steps:
+- login to the node
+  ```bash
+  $ ssh waggle-dev-node-W030
+  ```
 
-## Localisation
-- Execute commands in BASH:
-```
-# Change system language to US
-sudo sed -i 's/en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/g' /etc/locale.gen
-sudo sed -i 's/# en_US.UTF-8 utf-8/en_US.UTF-8 utf-8/g' /etc/locale.gen
-export LC_ALL=C
-export LANG=C
-sudo update-locale --no-checks LANG
-sudo update-locale --no-checks "LANG=en_US.UTF-8 UTF-8"
-sudo dpkg-reconfigure -f noninteractive locales
-# Change keyboard layout
-sudo sed -i 's/XKBMODEL="pc105"/XKBMODEL="pc104"/g' /etc/default/keyboard
-sudo dpkg-reconfigure -f noninteractive keyboard-configuration
-sudo invoke-rc.d keyboard-setup start
-setsid sh -c 'exec setupcon -k --force <> /dev/tty1 >&0 2>&1'
-sudo udevadm trigger --subsystem-match=input --action=change
-# Change Wifi country
-sudo iw reg set US
-sudo rfkill unblock wifi
-sudo -s
-	  for filename in /var/lib/systemd/rfkill/*:wlan ; do
-        echo 0 > $filename
-    done
-exit
-```
-## Install Dependencies
-- Execute apt commands in BASH:
-```
-sudo apt update
-sudo apt -y upgrade
-sudo apt -y install git apt-transport-https python3-pip iptables
-sudo pip3 install paho-mqtt pywaggle[all]
-```
-## Install RAK Software
-- Download and install RAK software in BASH:
-```
-git clone https://github.com/RAKWireless/rak_common_for_gateway.git ~/Downloads/rak_common_for_gateway
-cd ~/Downloads/rak_common_for_gateway
-printf 7 | sudo ./install.sh
-```
-## Configure RAK Software
-- Execute the following BASH commands:
-```
-# Setup LoRaWAN Gateway
-sudo cp /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf/global_conf.us_902_928.json /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json
-## Things Network: Uncomment following line
-#sudo sed -i "s/^.*server_plan.*$/\"server_plan\": \"1\",/" /usr/local/rak/gateway-config-info.json
-## Things Network: Replace 127.0.0.1 with TTN network DNS if required
-sudo sed -i "s/^.*server_address.*$/$(echo "        \"server_address\""): \"127.0.0.1\",/" /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json
-sudo cp /etc/chirpstack-network-server/chirpstack-network-server.us_902_928.toml /etc/chirpstack-network-server/chirpstack-network-server.toml
-## Things Network: Comment following lines
-sudo systemctl restart chirpstack-gateway-bridge
-sudo systemctl restart chirpstack-network-server
-sudo systemctl restart chirpstack-application-server
-## Things Network: Uncomment following lines
-# sudo systemctl stop chirpstack-gateway-bridge
-# sudo systemctl stop chirpstack-network-server
-# sudo systemctl stop chirpstack-application-server
-# sudo systemctl disable chirpstack-gateway-bridge
-# sudo systemctl disable chirpstack-network-server
-# sudo systemctl disable chirpstack-application-server
-sudo systemctl stop ttn-gateway
-sudo systemctl start ttn-gateway
-# Configure RAK to access point
-sudo systemctl enable create_ap
-```
-## Configure System
-```
-# Set RPI to console login
-sudo systemctl --quiet set-default multi-user.target
-sudo rm -f /etc/systemd/system/getty@tty1.service.d/autologin.conf
-# Enable SSH
-sudo ssh-keygen -A
-sudo update-rc.d ssh enable
-sudo invoke-rc.d ssh start
-# Enable Serial
-sudo sh -c "echo 'enable_uart=1' >> /boot/config.txt"
-sudo cp /boot/cmdline.txt /opt/pywaggle/cmdline.bak
-sudo sed -i 's/console=serial0,115200 //g' /opt/pywaggle/cmdline.bak
-sudo rm /boot/cmdline.txt
-sudo mv /opt/pywaggle/cmdline.txt /boot/cmdline.txt
+- identify the ID of the RPi
+  ```bash
+  $ sudo kubectl get node
+  NAME                          STATUS   ROLES                  AGE    VERSION
+  0000e45f012e8689.ws-rpi       Ready    <none>                 47d    v1.20.2+k3s1
+  000048b02d0766cd.ws-nxagent   Ready    <none>                 49d    v1.20.2+k3s1
+  000048b02d0766be.ws-nxcore    Ready    control-plane,master   196d   v1.20.2+k3s1
+  ```
+
+- apply the `resource.lorawan` label to the RPi
+  ```bash
+  $ sudo kubectl label node 0000e45f012e8689.ws-rpi resource.lorawan=true
+  node/0000e45f012e8689.ws-rpi labeled
+  ```
+
+- verify the `wes-chirpstack-gateway-bridge` pod is running
+  ```bash
+  $ sudo kubectl get pod | grep wes-chirpstack-gateway-bridge
+  wes-chirpstack-gateway-bridge-fbbdd4f4c-ksqjr    2/2     Running        0          5m27s
+  ```
+
+> Note: to remove the label you can execute the following example command: `sudo kubectl label node 0000e45f012e8689.ws-rpi resource.lorawan-`
+
+## Configuring the WES LoraWAN
+
+Access to the LoRaWAN device(s) data is configured using the [chirpstack.io](https://www.chirpstack.io/docs/index.html) software stack that is part of the default [Waggle Edge Stack (WES)](https://github.com/waggle-sensor/waggle-edge-stack) deployment (see [wes-chirpstack](https://github.com/waggle-sensor/waggle-edge-stack/tree/main/kubernetes/wes-chirpstack)). The configuration is done by accessing the [chirpstack.io application server](https://www.chirpstack.io/docs/chirpstack/configuration.html) Web UI on the target [Waggle Node](https://docs.waggle-edge.ai/docs/about/architecture#waggle-nodes).
+
+The following documentation sources may be helpful in configuring the Chirpstack software stack and connecting LoRaWAN devices:
+- Chirpstack Documentation: https://www.chirpstack.io/docs/index.html
+- Initial investigation: https://github.com/waggle-sensor/summer2022/blob/main/Tsai/Documentation.md
+
+### 1. Identify the `wes-chirpstack-server` service address
+
+First, connect to the desired node (ex. `W030`) and identify the IP address of the `wes-chirpstack-server`
+
+```bash
+$ ssh waggle-dev-node-W030 "sudo kubectl get svc | grep wes-chirpstack-server | xargs | cut -d' ' -f3"
+Welcome to our node SSH gateway, Joe Swantek!
+
+We are connecting you to node W030 (000048B02D0766BE)...
+10.43.12.212
 ```
 
-## Configure Chirpstack
-- Edit network server configuration file in BASH:
-```
-# Configure chirpstack network server
-sudo sh -c "echo '[general]\nlog_level=4' >> /etc/chirpstack-network-server/chirpstack-network-server.toml"
-# Configure chirpstack application server
-sudo sh -c "echo '[general]\nlog_level=4' >> /etc/chirpstack-application-server/chirpstack-application-server.toml"
-sudo sed -i -e "s/verysecret/$(openssl rand -base64 32)/g" /etc/chirpstack-application-server/chirpstack-application-server.toml
-```
-## Create Pywaggle Plugin
-- Create pywaggle directories and download Python file in BASH:
-```
-sudo mkdir /var/log/pywaggle
-sudo mkdir /opt/pywaggle
-git clone https://github.com/waggle-sensor/connectivity-LoRaWAN.git ~/opt/pywaggle
-sudo chmod +x /opt/pywaggle/mqtt_plugin.py
-```
--  Change permissions to service file and create symbolic link in BASH and enable pywaggle service, then restart system:
-```
-sudo ln -s /opt/pywaggle/mqtt_plugin.service /etc/systemd/system/mqtt_plugin.service
-sudo systemctl enable mqtt_plugin
-sudo shutdown -r now
-```
-## Check installation
-- Login with 'sagelora' credentials
-```
-sudo systemctl status mosquitto
-sudo systemctl status postgresql
-sudo systemctl status redis-server
-sudo systemctl status chirpstack-gateway-bridge
-sudo systemctl status chirpstack-network-server
-sudo systemctl status chirpstack-application-server
+### 2. `ssh` proxy connect to the Waggle node
+
+Use the above identified IP address (ex. `10.43.12.212`) establish a proxy connection to the `wes-chirpstack-server` web UI
+
+```bash
+ssh -L 8080:10.43.12.212:8080 waggle-dev-node-w030
 ```
 
-# Manual Build Using BASH plus Configuration Menus
+### 3. Open the Chirpstack Web UI in a browser
 
-## Install Operating System
-- Download latest Raspi Lite Arm 64 image from: [https://downloads.raspberrypi.org/raspios_lite_arm64/images/](https://downloads.raspberrypi.org/raspios_lite_arm64/images/)
-- Determine path to SD Micro and manually build image in BASH:
-```
-sudo lsblk
-sudo dd bs=4M if=/path/to/filename.img of=/path/to/device oflag=sync
-// e.g.: sudo dd bs=4M if=/mnt/data/02--PROJECTS/U/University-of-Oregon-Research/11--LORA/2022-04-04-raspios-bullseye-arm64-lite.img of=/dev/sda oflag=sync
-```
-- Insert SD Micro into RPIv4 and power on device
-- Select keyboard layout "Other", then "English (US)", then "English (US)"
-- Enter new username: "sagelora", then set a password: "ArgonneNatlLab"
-## Configure RPI System
-- Reboot RPIv4, plug in ethernet cable, and execute config commands in BASH:
-```
-sudo shutdown -r now
-sudo raspi-config
-# This opens a configuration menu
-```
-### 5 Localisations Options
-- Select "L1 Locale", deselect "en_GB.UTF-8 UTF-8", select "en_US.UTF-8 UTF-8", then "en_US.UTF-8"
-- Select "L2 Timezone", navigate to "America", then select to appropriate time zone
-- Select "L3 Keyboard", select "Generic 140-key PC", then "English (US)", then "The default for the keyboard layout", then "No compose key"
-- Select "L4 WLAN Country", select "US United States"
-## Install Dependencies
-- After reboot, login with "sagelora" credentials
-### Debian Dependencies:
-- Execute apt commands in BASH, then reboot:
-```
-sudo apt update
-sudo apt upgrade
-sudo apt install git apt-transport-https python3-pip iptables
-```
-### Python Dependencies:
-- Execute Python package manager commands in BASH:
-```
-sudo pip3 install paho-mqtt pywaggle[all]
-```
-## Install RAK Software
-- Download and install RAK software in BASH
-```
-git clone https://github.com/RAKWireless/rak_common_for_gateway.git ~/Downloads/rak_common_for_gateway
-cd ~/Downloads/rak_common_for_gateway
-sudo ./install.sh
-# This brings up a configuration menu
-```
-- Enter "7" for "7. RAK7248 no LTE (RAK2287 SPI + raspberry pi)"
-## Configure RAK Software
-- Execute config command in BASH:
-```
-sudo gateway-config
-# This opens a configuration menu
-```
-### 2 Setup RAK Gateway Channel Plan
-- Select "2 Server is Chirpstack", then "1 ChirpStack Channel-plan configuration", then "11 US_902_928", then server IP "127.0.0.1"
-### 5 Configure WIFI
-- Select "1 Enable AP Mode/Disable Client Mode"
-## Configure RPI System
-```
-sudo raspi-config
-# This opens a configuration menu
-```
-### 1 System Options
-- Select "S5 Boot / Auto Login", then "B1 Console"
-### 3 Interface Options
-- Select "I2 SSH", verfiy with "Yes"
-- Select "I6 Serial Port", then answer "No" to disable login shell accessibility over serial port, then answer "Yes" to enable serial port hardware
-### 4 Performance Options
-- Select "P2 GPU Memory", then enter "16"
+Enter the `wes-chirpstack-server` Web UI address http://localhost:8080/ into a browser
 
-### Finish Configuration
-- Select "Finish", DO NOT REBOOT
+You will be presented with a login UI
 
-## Configure Chirpstack
-- Edit network server configuration file in BASH:
-```
-sudo nano /etc/chirpstack-network-server/chirpstack-network-server.toml
-```
-- Make the following changes inside the file, at location of indicated tags:
-```
-# Add the following lines immediately after the file header
-[general]
-log_level=4
-```
-- Build random secret key and save the output in BASH:
-```
-openssl rand -base64 32
-```
-- Edit application server configuration file in BASH:
-```
-sudo nano /etc/chirpstack-application-server/chirpstack-application-server.toml
-```
--Make the following changes inside the file, at location of indicated tags:
-```
-# Add the following lines immediately after the file header
-[general]
-log_level=4
+![](_images/01_login.png)
 
-[application_server.external_api]
-# jwt_secret="verysecret" (the fourth key below the tag)
-# Use output from openssl rand command (instructions above)
-# The following is an example of a random base64 32-character key
-jwt_secret="TWpC5KJuWmoJ+fRWTLynCL/gfjur+TiPpvH5fd3JTmk="
-```
-## Create Pywaggle Plugin
-- Create pywaggle directories and download Python file in BASH:
-```
-sudo mkdir /var/log/pywaggle
-sudo mkdir /opt/pywaggle
-sudo wget https://raw.githubusercontent.com/waggle-sensor/summer2022/main/Tsai/plugin/mqtt_plugin.py -P /opt/pywaggle
-sudo chmod +x /opt/pywaggle/mqtt_plugin.py
-```
-- Edit mqtt_plugin.py in BASH:
-```
-sudo nano /opt/pywaggle/mqtt_plugin.py
-```
-- Find logging directory near top of file and change:
-```
-# os.environ["PYWAGGLE_LOG_DIR"] = "/var/log/pywaggle"
-```
-- Create systemd service file in BASH:
-```
-sudo nano /opt/pywaggle/mqtt_plugin.service
-```
-- Copy and paste into service file in BASH:
-```
-[Unit]
-Description=Pywaggle Asynchronous Callback
-After=network.target
-StartLimitIntervalSec=0
+Login with the `admin` / `admin` credentials. You will be presented with an empty Chirpstack dashboard
 
-[Service]
-Type=simple
-User=root
-Restart=always
-RestartSec=1
-ExecStart=/usr/bin/python3 /opt/pywaggle/mqtt_plugin.py
+### 4. Connect to the `wes-gateway`
 
-[Install]
-WantedBy=multi-user.target
-```
-- Change permissions to service file and create symbolic link in BASH and enable pywaggle service, then restart system:
-```
-sudo ln -s /opt/pywaggle/mqtt_plugin.service /etc/systemd/system/mqtt_plugin.service
-sudo systemctl enable mqtt_plugin
-sudo shutdown -r now
-```
-## Check installation
-- Login with 'sagelora' credentials
-```
-sudo systemctl status mosquitto
-sudo systemctl status postgresql
-sudo systemctl status redis-server
-sudo systemctl status chirpstack-gateway-bridge
-sudo systemctl status chirpstack-network-server
-sudo systemctl status chirpstack-application-server
-```
+Reference:
+- Chirpstack gateway docs: https://www.chirpstack.io/docs/chirpstack/use/gateways.html
+
+Click on 'Gateways' under the 'Tenant' section on the left. Select the 'Add Gateway' button (on the upper right). Enter the following:
+- `wes-gateway` for the 'Name'
+- `D2CE19FFFEC9D449` for the 'Gateway ID (EUI64)'
+
+![](_images/02_add_gateway.png)
+
+Scroll to the bottom and click the 'Submit' button. 
+
+Clicking on 'Gateways' under the 'Tenant' section on the left should show the newly added gateway with a recent 'Last seen' time.
+
+![](_images/03_gateway_confirm.png)
+
+> Note: it may take a few moments for the 'Last seen' to be populated and a URL re-fresh may be necessary. If the 'Last seen' is not populated then there is an issue that needs to be debugged.
+
+Clicking on the 'Gateway ID' will take you to the gateway details page where you can view the most recent LoRaWAN data via the 'LoRaWAN frames' tab.
+
+![](_images/04_gateway_frames.png)
+
+From here you can click on any frames 'ConfirmedDataUp' link to see the details of the frame.
+
+![](_images/05_frame_details.png)
+
+### 5. Add the Application
+
+LoRaWAN devices are associated with a Chirpstack "application" and therefore an "application" needs to be created.
+
+Reference:
+- Chirpstack application docs: https://www.chirpstack.io/docs/chirpstack/use/applications.html
+
+Click on 'Applications' under the 'Tenant' section on the left. Select the 'Add application' button (on the upper right). Enter the following:
+- `wes-application` for the 'Name'
+
+![](_images/16_add_application.png)
+
+Click the 'Submit' button.
+
+![](_images/17_add_application_done.png)
+
+### 6. Creating Device Profiles from the built-in templates
+
+The Chirpstack server comes pre-loaded with hundreds of "Device-profile templates" from [The Things Network LoRaWAN devices github repository](https://github.com/TheThingsNetwork/lorawan-devices). In this step we will create "Device profiles" from these templates in order to properly configure the devices for connection to an "application" (below).
+
+Devices are associated and authenticated to a Chirpstack "application".  There are two methods of authentication:
+1. Over the Air Activation (OTAA)
+2. Activation by Personalization (ABP)
+
+|                 |                                                           ABP                                                            |                                                                OTAA                                                                |
+| :-------------: | :----------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------: |
+| **Description** | Uses Device Address (DevAddr), Network Session Key (NWK SKEY), and Application Session Key (APP SKEY) to join the server | Uses Application Key (APP KEY) for request joining the server. Once joined, The NWK SKEY, APP SKEY, and DevAddr will be generated. |
+|    **Pros**     |                                          Can rejoin network after device reset                                           |                         The session keys don't have to be hardcoded; only the application key has to match                         |
+|    **Cons**     |                             The DevAddr, NWKSKEY, APPSKEY have to be hardcoded in the device                             |                       To rejoin network after device reset, you have to manually match up the device address                       |
+
+Reference:
+- Chirpstack device-profile templates docs: https://www.chirpstack.io/docs/chirpstack/use/device-profile-templates.html
+- Device activation technologies (ex. OTAA): https://www.chirpstack.io/docs/chirpstack/features/device-activation.html
+
+The following instructions demonstrate adding two example device profiles:
+- [MKR WAN 1310](https://store.arduino.cc/products/arduino-mkr-wan-1310)
+- [LoRa E5-mini](https://www.seeedstudio.com/LoRa-E5-mini-STM32WLE5JC-p-4869.html)
+
+Before we can add the devices to the `wes-application` we need to create "Device profiles" for the devices based on the "Device-profile templates".
+
+Click on 'Device profiles' under the 'Tenant' section on the left. Select the 'Add device profile' button (on the upper right). Select the 'Select device-profile template'. Search for the device by clicking on the drop-down box.
+
+For example, for the "MKR WAN 1310" you would select the following:
+- Arduino SA -> Adruino MKR WAN 1310 -> FW version: <version> -> US915
+
+![](_images/18_pick_device_template_01.png)
+
+For example, for the "LoRa E5-mini" you would select the following:
+- Seeed Technology Co., Ltd -> Wio-E5 Dev Kit, for Long Range Application -> FW version: <version> -> US915
+
+![](_images/19_pick_device_template_02.png)
+
+> Note: if you don't know the specifics of your device you can search for template definition within [The Things Network LoRaWAN devices github repository](https://github.com/TheThingsNetwork/lorawan-devices).
+
+> Note: if you don't want to use a built in template, you can create custom "Device profiles" via the instructions below.
+
+After selecting "OK", the "Device profile" will be loaded with all the template defaults.
+
+![](_images/20_device_profile.png)
+
+Click the "Submit" button after making any modifications.
+
+After adding the "Device profiles" you will see a summary of all the created "Device profiles".
+
+![](_images/21_device_profile_summary.png)
+
+### 7. Add Devices to the `wes-application`
+
+With the "Device profiles" created for the devices, the devices can now be added to the `wes-application`. 
+
+Reference:
+- Chirpstack devices docs: https://www.chirpstack.io/docs/chirpstack/use/devices.html
+- Example MKRWAN setup: https://github.com/waggle-sensor/summer2022/blob/main/Tsai/Documentation.md#setting-up-the-mkrwan
+
+From within the `wes-application` created above, click the 'Add device' button.
+
+![](_images/22_app_add_device_button.png)
+
+#### _OTAA Device Activation_
+
+On the 'Add device' screen enter the following:
+- a unique name (ex. `MKRWAN1310 Device 1`) for the 'Name'
+- the device's EUI (ex. `123456789abcdeff`) for the 'Device EUI (EUI64)'. You may need to identify the device's EUI via a serial connection to the device.
+- select the appropriate 'Device profile' (ex. `Adruino MKR WAN 1310`)
+
+![](_images/23_app_add_device_otaa_details.png)
+
+Click the "Submit" button.
+
+Now you will be presented with a screen for the activation of the device.
+
+For OTAA devices you will be asked for the 'Application key'.  You can randomly generate one or type in pre-defined key here.
+
+![](_images/24_activation_otaa.png)
+
+Click the "Submit" button.
+
+You will then be presented with a dashboard for the device where you can check the 'OTAA keys', see 'Activation' status and browse the 'LoRaWAN frames'.
+
+![](_images/25_dashboard_otaa.png)
+
+> Note: at the time of writing this tutorial there we no devices available to verify these steps.
+
+#### _ABP Device Activation_
+
+If the device does not support OTAA activation, then ABP activation can be done.
+
+Like the above OTAA configuration you will enter the following:
+- a unique name (ex. `Test Device 1`) for the 'Name'
+- the device's EUI (ex. `ffedcba987654321`) for the 'Device EUI (EUI64)'. You may need to identify the device's EUI via a serial connection to the device.
+- select the appropriate 'Device profile' (ex. `testABP`)
+
+![](_images/26_app_add_device_abp_details.png)
+
+Click the 'Submit' button
+
+You will then be presented with a dashboard for the device with the 'OTAA keys' disabled. Navigate to the 'Activation' tab to input the 'Device address', 'Network session key' and 'Application session key'.
+
+![](_images/27_activation_abp.png)
+
+Click '(Re)activate device`
+
+> Note: at the time of writing this tutorial there we no devices available to verify these steps.
+
+### 8. Access LoRaWAN Data using test `python` app
+
+The `lorawan-test.py` `python` app can be run on a [Waggle Node](https://docs.waggle-edge.ai/docs/about/architecture#waggle-nodes) to subscribe to LoRaWAN device data (within an Chirpstack application) and demonstrate how to publish this data to [Beehive](https://docs.waggle-edge.ai/docs/about/architecture#beehive).
+
+To run the application on a node perform the following steps:
+- login to a node
+  ```bash
+  $ ssh waggle-dev-node-W030
+  ```
+
+- `git` clone this repository
+  ```bash
+  $ git clone https://github.com/waggle-sensor/waggle-lorawan.git
+  ```
+
+- navigate to the folder and build and run the code (ref: https://docs.waggle-edge.ai/docs/tutorials/edge-apps/testing-an-edge-app)
+  ```bash
+  ~/waggle-lorawan$ sudo pluginctl build .
+  ...
+  Successfully built plugin
+
+  10.31.81.1:5000/local/waggle-lorawan
+
+  ~/waggle-lorawan$ sudo kubectl apply -f lorawan-test.yaml
+  deployment.apps/waggle-lorawan created
+  ```
+
+  This will launch the [kubernetes](https://kubernetes.io/) pod using the customizations provided by the `lorawan-test.yaml`
+
+  > Note: you may need to make changes to the `lorawan-test.yaml` file to modify items like `MQTT_SUBSCRIBE_TOPIC` that define the Chirpstack application ID to subscribe to
+
+- see the logs from the application
+
+  ```
+  ~/waggle-lorawan$ sudo kubectl logs -f $(sudo kubectl get pod | grep -e lorawan | cut -d' ' -f1)
+  2022/11/23 18:42:38 connecting [wes-rabbitmq:1883]...
+  2022/11/23 18:42:38 subscribing [application/2/device/#]...
+  2022/11/23 18:42:38 waiting for callback...
+  ```
+
+- tear down the test app
+  ```bash
+  ~/waggle-lorawan$ sudo kubectl delete -f lorawan-test.yaml
+  ```
+
+> Note: at the time of writing this tutorial the `lorawan-test.py` file is incomplete
+
+## Adding Custom Device Profiles
+
+If the built in device profile templates are not sufficient then default "ADP" and "OTAA" device profiles can be configured.
+
+References
+- Initial investigation using an older Web UI: https://github.com/waggle-sensor/summer2022/blob/main/Tsai/Documentation.md#setup-device-profiles
+
+### Add the 'ABP' device profile
+
+In order for a LoRaWAN device to connect to an "application" (see below) it will need to authenticate using a device profile.
+
+Click on 'Device profiles' under the 'Tenant' section on the left. Select the 'Add device profile' button (on the upper right). Enter the following:
+- `ABP` for the 'Name'
+- `US915` for the 'Region'
+- `LoRaWAN 1.0.2` for the 'MAC version'
+- `B` for the 'Regional parameters revision'
+- `Default ADR algorithm (LoRa only)` for 'ADR algorithm'
+- `30000` for 'Expected uplink interval (secs)'
+
+> Note: the value for 'Expected uplink interval' may change based on the deployment configuration.
+
+![](_images/06_abp_profile_main.png)
+
+Select the 'Join (OTAA / ABP)' tab and disable the 'Device supports OTAA'
+
+![](_images/07_abp_profile_join.png)
+
+Select the 'Class-B' tab and enable the 'Device supports Class-B' 
+
+![](_images/08_abp_profile_classb.png)
+
+Select the 'Class-C' tab and enable the 'Device supports Class-C'
+
+![](_images/09_abp_profile_classc.png)
+
+> Note: it is possible to select the 'Payload codec' to have the Application Server decode the data.
+
+Click the 'Submit' button.
+
+![](_images/10_adp_profile_done.png)
+
+### Add the 'OTAA' device profile
+
+Just like was done for the above 'ABP' profile we need to add an 'OTAA' device profile to enable proper device connections.
+
+Click on 'Device profiles' under the 'Tenant' section on the left. Select the 'Add device profile' button (on the upper right). Enter the following:
+- `OTAA` for the 'Name'
+- `US915` for the 'Region'
+- `LoRaWAN 1.0.2` for the 'MAC version'
+- `B` for the 'Regional parameters revision'
+- `Default ADR algorithm (LoRa only)` for 'ADR algorithm'
+- `80000` for 'Expected uplink interval (secs)'
+
+> Note: the value for 'Expected uplink interval' may change based on the deployment configuration.
+
+![](_images/11_otaa_profile_main.png)
+
+Select the 'Join (OTAA / ABP)' tab and enable the 'Device supports OTAA'
+
+![](_images/12_otaa_profile_join.png)
+
+Select the 'Class-B' tab and disable the 'Device supports Class-B' 
+
+![](_images/13_otaa_profile_classb.png)
+
+Select the 'Class-C' tab and disable the 'Device supports Class-C'
+
+![](_images/14_otaa_profile_classc.png)
+
+> Note: it is possible to select the 'Payload codec' to have the Application Server decode the data.
+
+Click the 'Submit' button.
+
+![](_images/15_otaa_profile_done.png)

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: waggle-lorawan
+spec:
+  selector:
+    matchLabels:
+      app: waggle-lorawan
+  template:
+    metadata:
+      labels:
+        app: waggle-lorawan
+    spec:
+      containers:
+        - name: waggle-lorawan
+          image: 10.31.81.1:5000/local/waggle-lorawan:latest
+          resources:
+            requests:
+              cpu: 50m
+              memory: 25Mi
+            limits:
+              memory: 50Mi
+          envFrom:
+            - configMapRef:
+                name: wes-identity
+          env:
+            - name: MQTT_SERVER_HOST
+              value: "wes-rabbitmq"
+            - name: MQTT_SERVER_PORT
+              value: "1883"
+            # This topic will need to be adjusted based on the application ID
+            - name: MQTT_SUBSCRIBE_TOPIC
+              value: "application/2/device/#"
