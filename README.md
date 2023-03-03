@@ -28,6 +28,9 @@ In order for the RAK concentrator (Model: RAK7248, Module: [RAK2287](https://sto
 > Note: this will automatically be done in a later update to https://github.com/waggle-sensor/wes-device-labeler but must be done manually for now.
 
 To manually apply the `label` perform the following steps:
+
+> **The below steps are temporary because of how the https://github.com/waggle-sensor/wes-device-labeler works.  The device-labeler removes any labels that aren't in the cloud manifest and also verified via a hardware availability test.** So the below steps can be used to get the gateway-bridge to run, but after a short time the gateway-bridge will be terminated by K3S due to the missing node label.
+
 - login to the node
   ```bash
   $ ssh waggle-dev-node-W030
