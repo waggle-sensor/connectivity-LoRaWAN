@@ -15,7 +15,6 @@ The [Waggle Edge Stack (WES)](https://github.com/waggle-sensor/waggle-edge-stack
     - [7. Add Devices to the `wes-application`](#7-add-devices-to-the-wes-application)
       - [_OTAA Device Activation_](#otaa-device-activation)
       - [_ABP Device Activation_](#abp-device-activation)
-    - [8. Access LoRaWAN Data using test `python` app](#8-access-lorawan-data-using-test-python-app)
   - [Adding Custom Device Profiles](#adding-custom-device-profiles)
     - [Add the 'ABP' device profile](#add-the-abp-device-profile)
     - [Add the 'OTAA' device profile](#add-the-otaa-device-profile)
@@ -246,55 +245,6 @@ You will then be presented with a dashboard for the device with the 'OTAA keys' 
 ![](_images/27_activation_abp.png)
 
 Click '(Re)activate device`
-
-> Note: at the time of writing this tutorial there we no devices available to verify these steps.
-
-### 8. Access LoRaWAN Data using test `python` app
-
-The `lorawan-test.py` `python` app can be run on a [Waggle Node](https://docs.waggle-edge.ai/docs/about/architecture#waggle-nodes) to subscribe to LoRaWAN device data (within an Chirpstack application) and demonstrate how to publish this data to [Beehive](https://docs.waggle-edge.ai/docs/about/architecture#beehive).
-
-To run the application on a node perform the following steps:
-- login to a node
-  ```bash
-  $ ssh waggle-dev-node-W030
-  ```
-
-- `git` clone this repository
-  ```bash
-  $ git clone https://github.com/waggle-sensor/waggle-lorawan.git
-  ```
-
-- navigate to the folder and build and run the code (ref: https://docs.waggle-edge.ai/docs/tutorials/edge-apps/testing-an-edge-app)
-  ```bash
-  ~/waggle-lorawan$ sudo pluginctl build .
-  ...
-  Successfully built plugin
-
-  10.31.81.1:5000/local/waggle-lorawan
-
-  ~/waggle-lorawan$ sudo kubectl apply -f lorawan-test.yaml
-  deployment.apps/waggle-lorawan created
-  ```
-
-  This will launch the [kubernetes](https://kubernetes.io/) pod using the customizations provided by the `lorawan-test.yaml`
-
-  > Note: you may need to make changes to the `lorawan-test.yaml` file to modify items like `MQTT_SUBSCRIBE_TOPIC` that define the Chirpstack application ID to subscribe to
-
-- see the logs from the application
-
-  ```
-  ~/waggle-lorawan$ sudo kubectl logs -f $(sudo kubectl get pod | grep -e lorawan | cut -d' ' -f1)
-  2022/11/23 18:42:38 connecting [wes-rabbitmq:1883]...
-  2022/11/23 18:42:38 subscribing [application/2/device/#]...
-  2022/11/23 18:42:38 waiting for callback...
-  ```
-
-- tear down the test app
-  ```bash
-  ~/waggle-lorawan$ sudo kubectl delete -f lorawan-test.yaml
-  ```
-
-> Note: at the time of writing this tutorial the `lorawan-test.py` file is incomplete
 
 ## Adding Custom Device Profiles
 
