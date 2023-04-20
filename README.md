@@ -4,6 +4,7 @@ The [Waggle Edge Stack (WES)](https://github.com/waggle-sensor/waggle-edge-stack
 
 **Table of Contents**
 - [Waggle LoRaWAN Usage Instructions](#waggle-lorawan-usage-instructions)
+  - [Setting up RAK Discover Kit 2 to be discoverable by WES](#setting-up-rak-discover-kit-2-to-be-discoverable-by-wes)
   - [Enabling WES access to the RAK concentrator](#enabling-wes-access-to-the-rak-concentrator)
   - [Configuring the WES LoraWAN](#configuring-the-wes-lorawan)
     - [1. Identify the `wes-chirpstack-server` service address](#1-identify-the-wes-chirpstack-server-service-address)
@@ -19,6 +20,9 @@ The [Waggle Edge Stack (WES)](https://github.com/waggle-sensor/waggle-edge-stack
     - [Add the 'ABP' device profile](#add-the-abp-device-profile)
     - [Add the 'OTAA' device profile](#add-the-otaa-device-profile)
     - [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom)
+
+## Setting up RAK Discover Kit 2 to be discoverable by WES
+
 
 
 ## Enabling WES access to the RAK concentrator
@@ -206,7 +210,7 @@ From within the `wes-application` created above, click the 'Add device' button.
 
 On the 'Add device' screen enter the following:
 - a unique name (ex. `MKRWAN1310 Device 1`) for the 'Name'
-- the device's EUI (ex. `123456789abcdeff`) for the 'Device EUI (EUI64)'. You may need to identify the device's EUI via a serial connection to the device.
+- the device's EUI (ex. `123456789abcdeff`) for the 'Device EUI (EUI64)'. You may need to identify the device's EUI via a serial connection to the device see [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom).
 - select the appropriate 'Device profile' (ex. `Adruino MKR WAN 1310`)
 
 ![](_images/23_app_add_device_otaa_details.png)
@@ -225,7 +229,11 @@ You will then be presented with a dashboard for the device where you can check t
 
 ![](_images/25_dashboard_otaa.png)
 
-> Note: at the time of writing this tutorial there we no devices available to verify these steps.
+To connect the LoRa End device one must change the mode to OTAA, configure the device with the 'Application key', and join the network. Refer to your device's manual on how to do so.
+
+If you are using a Lora E5 Mini, this can be done using the at command `at+mode=lwotaa` to change the mode to OTAA. Then `at+key=appskey, {16 bytes length key}`. {16 bytes length key} being the application key to configure the application key. `at+join` to join the network. All these at commands can be sent using minicom, refer to [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom).
+
+Once that is configured, the device should join the network and send an event to chirpstack viewable in the `Events` tab.
 
 #### _ABP Device Activation_
 
@@ -245,6 +253,8 @@ You will then be presented with a dashboard for the device with the 'OTAA keys' 
 ![](_images/27_activation_abp.png)
 
 Click '(Re)activate device`
+
+To connect the LoRa End device one must change the mode to ABP, configure the device with the 'Device Address', 'Network Session Key', and 'Application Session Key'. Finally, after all three are configured the device must join the network. Refer to your device's manual on how to do so.
 
 ## Adding Custom Device Profiles
 
