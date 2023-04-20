@@ -19,6 +19,7 @@ The [Waggle Edge Stack (WES)](https://github.com/waggle-sensor/waggle-edge-stack
   - [Adding Custom Device Profiles](#adding-custom-device-profiles)
     - [Add the 'ABP' device profile](#add-the-abp-device-profile)
     - [Add the 'OTAA' device profile](#add-the-otaa-device-profile)
+    - [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom)
 
 
 ## Enabling WES access to the RAK concentrator
@@ -369,3 +370,34 @@ Select the 'Class-C' tab and disable the 'Device supports Class-C'
 Click the 'Submit' button.
 
 ![](_images/15_otaa_profile_done.png)
+
+### Accessing LoRa End Device via Minicom
+
+1) To connect to your LoRa End Device, you have to first connect your LoRa End Device to your personal device via a cable.
+
+1) Launch minicom with the appropriate rights, `sudo minicom -s`
+
+1) Go to Serial Port Setup. Configure the serial device on which is the cable (ex; /dev/ttyUSB0). Set the baud rate to the one specified in the device's manual (9600 for Lora E5 Mini).
+
+1) Disable hardware and software flow controls. After that select Exit to close the configuration screen
+
+1) Press `Ctrl-A` and then `E` to enable echo. Finally we are ready type commands
+
+1) Type `at`, if you receive `+AT: OK` then you configured the connection correctly.
+
+1) To Save the configurations use `configure minicom/save setup as...` accessed using `Ctrl-A` and then `Z`. Once this is saved you can access your saved environment with the command `sudo minicom {name}`, {name} being the name you saved it as.
+
+1) When you send commands follow them with `Ctrl-J` to send in LF.
+
+>NOTE: If you are receiving an input timeout issue or the command is sent to quick disabling you to type, try changing the timeout setting on the device. On the Lora E5 Mini, the at command `AT+UART=TIMEOUT, 0` disables the timeout feature.
+
+
+## Learn More & Supporting Documentation
+
+- [LoRa-E5 AT Command Specification](https://files.seeedstudio.com/products/317990687/res/LoRa-E5%20AT%20Command%20Specification_V1.0%20.pdf)
+- [RAK2287 Quick Start Guide](https://docs.rakwireless.com/Product-Categories/WisLink/RAK2287/Quickstart/)
+- [Summer 2022 Student Research](https://github.com/waggle-sensor/summer2022/blob/main/Tsai/Documentation.md)
+- [Wes-Chirpstack](https://github.com/waggle-sensor/waggle-edge-stack/tree/main/kubernetes/wes-chirpstack)
+- [Chirpstack Documentation](https://www.chirpstack.io/docs/index.html)
+- [Minicom Documentation](https://linux.die.net/man/1/minicom)
+
