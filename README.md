@@ -4,6 +4,7 @@ The [Waggle Edge Stack (WES)](https://github.com/waggle-sensor/waggle-edge-stack
 
 **Table of Contents**
 - [Waggle LoRaWAN Usage Instructions](#waggle-lorawan-usage-instructions)
+  - [Setting up RAK Discover Kit 2 to be discoverable by WES](#setting-up-rak-discover-kit-2-to-be-discoverable-by-wes)
   - [Enabling WES access to the RAK concentrator](#enabling-wes-access-to-the-rak-concentrator)
   - [Configuring the WES LoraWAN](#configuring-the-wes-lorawan)
     - [1. Identify the `wes-chirpstack-server` service address](#1-identify-the-wes-chirpstack-server-service-address)
@@ -15,11 +16,62 @@ The [Waggle Edge Stack (WES)](https://github.com/waggle-sensor/waggle-edge-stack
     - [7. Add Devices to the `wes-application`](#7-add-devices-to-the-wes-application)
       - [_OTAA Device Activation_](#otaa-device-activation)
       - [_ABP Device Activation_](#abp-device-activation)
-    - [8. Access LoRaWAN Data using test `python` app](#8-access-lorawan-data-using-test-python-app)
   - [Adding Custom Device Profiles](#adding-custom-device-profiles)
     - [Add the 'ABP' device profile](#add-the-abp-device-profile)
     - [Add the 'OTAA' device profile](#add-the-otaa-device-profile)
+    - [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom)
 
+## Setting up RAK Discover Kit 2 to be discoverable by WES
+
+To allow the RAK Discover Kit 2 to be detected by WES, you need to ensure that the device can establish communication with the node. Here are the steps to follow in order to achieve this:
+
+1) Refer to the [Quick Start Guide](https://docs.rakwireless.com/Product-Categories/WisLink/RAK2287/Quickstart), to ssh into the gateway
+- Default username: `pi`
+- Default password: `raspberry`
+2) Assuming you have successfully logged into your gateway using SSH. Enter the following command in the command line: `sudo gateway-config`
+3) Set eth0 ip address to the same network as the node and set eth0 gateway ip to the NX's ip address, refer to [Connect through Ethernet](https://docs.rakwireless.com/Product-Categories/WisLink/RAK2287/Quickstart/#connect-through-ethernet) on how to do so.
+- For example if the node's ip address is 10.31.81.50, then change the eth0 ip address to 10.31.81.51
+- The NX's ip address always ends with 1, so based on the example above the NX's ip address will be 10.31.81.1
+4) Add the node's NX IP address as a DNS server to the gateway, to do so add the IP address to RPI's `/etc/resolv.conf`
+5) Enable Linux's memory controller, to do so change `/boot/cmdline.txt` from:
+```
+console=tty1 root=PARTUUID=24e4d811-02 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait modules-load=dwc2,g_ether
+```
+to:
+```
+console=tty1 root=PARTUUID=24e4d811-02 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait modules-load=dwc2,g_ether cgroup_memory=1 cgroup_enable=memory
+```
+6) Join the K3s cluster, to do so run this in the command line
+```
+MACLower=$(sed s/://g /sys/class/net/eth0/address)
+MAC=${MACLower^^}
+MACFULL=$(printf "0000%5s\n" "$MAC")
+hostname=$(cat /etc/hostname)
+
+export K3S_URL=https://10.31.81.1:6443
+export K3S_TOKEN=4tX0DUZ0uQknRtVUAKjt
+export K3S_NODE_NAME=$MACFULL.$hostname
+
+curl -sfL https://get.k3s.io | sh
+```
+7) Configure the local Docker registry access, to do so run this in the command line
+```
+echo "Configure local Docker registery access" | xargs -L 1 echo `date +'[%Y-%m-%d %H:%M:%S]'` >> /etc/rc.local.logs
+mkdir -p /etc/docker/certs.d/10.31.81.1\:5000/
+cp /etc/waggle/docker/certs/domain.crt /etc/docker/certs.d/10.31.81.1\:5000/
+mkdir -p /usr/local/share/ca-certificates
+cp /etc/waggle/docker/certs/domain.crt /usr/local/share/ca-certificates/docker.crt
+update-ca-certificates
+```
+8) After doing the above steps, the gateway should now be discoverable by WES. It should be named `rak-gateway`. If the gateway is not appearing restart the rpi.
+```
+root@ws-nxcore-000048B02D0766BE:~# sudo kubectl get node
+NAME                           STATUS     ROLES                  AGE   VERSION
+000048b02d0766cd.ws-nxagent    NotReady   <none>                 24d   v1.25.4+k3s1
+0000dca632a306b4.ws-rpi        NotReady   <none>                 24d   v1.25.4+k3s1
+000048b02d0766be.ws-nxcore     Ready      control-plane,master   24d   v1.25.4+k3s1
+0000e45f01384120.rak-gateway   Ready      <none>                 11s   v1.25.7+k3s1 << look for something like this
+```
 
 ## Enabling WES access to the RAK concentrator
 
@@ -206,7 +258,7 @@ From within the `wes-application` created above, click the 'Add device' button.
 
 On the 'Add device' screen enter the following:
 - a unique name (ex. `MKRWAN1310 Device 1`) for the 'Name'
-- the device's EUI (ex. `123456789abcdeff`) for the 'Device EUI (EUI64)'. You may need to identify the device's EUI via a serial connection to the device.
+- the device's EUI (ex. `123456789abcdeff`) for the 'Device EUI (EUI64)'. You may need to identify the device's EUI via a serial connection to the device see [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom).
 - select the appropriate 'Device profile' (ex. `Adruino MKR WAN 1310`)
 
 ![](_images/23_app_add_device_otaa_details.png)
@@ -225,7 +277,11 @@ You will then be presented with a dashboard for the device where you can check t
 
 ![](_images/25_dashboard_otaa.png)
 
-> Note: at the time of writing this tutorial there we no devices available to verify these steps.
+To connect the LoRa End device one must change the mode to OTAA, configure the device with the 'Application key', and join the network. Refer to your device's manual on how to do so.
+
+If you are using a Lora E5 Mini, this can be done using the at command `at+mode=lwotaa` to change the mode to OTAA. Then `at+key=appskey, {16 bytes length key}`. {16 bytes length key} being the application key to configure the application key. `at+join` to join the network. All these at commands can be sent using minicom, refer to [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom). You might also need to change the channel of the device to the channels supported in the region. In the US, this can be done using the command `at+ch=NUM,8-15`.
+
+Once that is configured, the device should join the network and send an event to chirpstack viewable in the `Events` tab.
 
 #### _ABP Device Activation_
 
@@ -246,54 +302,7 @@ You will then be presented with a dashboard for the device with the 'OTAA keys' 
 
 Click '(Re)activate device`
 
-> Note: at the time of writing this tutorial there we no devices available to verify these steps.
-
-### 8. Access LoRaWAN Data using test `python` app
-
-The `lorawan-test.py` `python` app can be run on a [Waggle Node](https://docs.waggle-edge.ai/docs/about/architecture#waggle-nodes) to subscribe to LoRaWAN device data (within an Chirpstack application) and demonstrate how to publish this data to [Beehive](https://docs.waggle-edge.ai/docs/about/architecture#beehive).
-
-To run the application on a node perform the following steps:
-- login to a node
-  ```bash
-  $ ssh waggle-dev-node-W030
-  ```
-
-- `git` clone this repository
-  ```bash
-  $ git clone https://github.com/waggle-sensor/waggle-lorawan.git
-  ```
-
-- navigate to the folder and build and run the code (ref: https://docs.waggle-edge.ai/docs/tutorials/edge-apps/testing-an-edge-app)
-  ```bash
-  ~/waggle-lorawan$ sudo pluginctl build .
-  ...
-  Successfully built plugin
-
-  10.31.81.1:5000/local/waggle-lorawan
-
-  ~/waggle-lorawan$ sudo kubectl apply -f lorawan-test.yaml
-  deployment.apps/waggle-lorawan created
-  ```
-
-  This will launch the [kubernetes](https://kubernetes.io/) pod using the customizations provided by the `lorawan-test.yaml`
-
-  > Note: you may need to make changes to the `lorawan-test.yaml` file to modify items like `MQTT_SUBSCRIBE_TOPIC` that define the Chirpstack application ID to subscribe to
-
-- see the logs from the application
-
-  ```
-  ~/waggle-lorawan$ sudo kubectl logs -f $(sudo kubectl get pod | grep -e lorawan | cut -d' ' -f1)
-  2022/11/23 18:42:38 connecting [wes-rabbitmq:1883]...
-  2022/11/23 18:42:38 subscribing [application/2/device/#]...
-  2022/11/23 18:42:38 waiting for callback...
-  ```
-
-- tear down the test app
-  ```bash
-  ~/waggle-lorawan$ sudo kubectl delete -f lorawan-test.yaml
-  ```
-
-> Note: at the time of writing this tutorial the `lorawan-test.py` file is incomplete
+To connect the LoRa End device one must change the mode to ABP, configure the device with the 'Device Address', 'Network Session Key', and 'Application Session Key'. Finally, after all three are configured the device must join the network. Refer to your device's manual on how to do so.
 
 ## Adding Custom Device Profiles
 
@@ -369,3 +378,34 @@ Select the 'Class-C' tab and disable the 'Device supports Class-C'
 Click the 'Submit' button.
 
 ![](_images/15_otaa_profile_done.png)
+
+### Accessing LoRa End Device via Minicom
+
+1) To connect to your LoRa End Device, you have to first connect your LoRa End Device to your personal device via a cable.
+
+1) Launch minicom with the appropriate rights, `sudo minicom -s`
+
+1) Go to Serial Port Setup. Configure the serial device on which is the cable (ex; /dev/ttyUSB0). Set the baud rate to the one specified in the device's manual (9600 for Lora E5 Mini).
+
+1) Disable hardware and software flow controls. After that select Exit to close the configuration screen
+
+1) Press `Ctrl-A` and then `E` to enable echo. Finally we are ready type commands
+
+1) Type `at`, if you receive `+AT: OK` then you configured the connection correctly.
+
+1) To Save the configurations use `configure minicom/save setup as...` accessed using `Ctrl-A` and then `Z`. Once this is saved you can access your saved environment with the command `sudo minicom {name}`, {name} being the name you saved it as.
+
+1) When you send commands follow them with `Ctrl-J` to send in LF.
+
+>NOTE: If you are receiving an input timeout issue or the command is sent to quick disabling you to type, try changing the timeout setting on the device. On the Lora E5 Mini, the at command `AT+UART=TIMEOUT, 0` disables the timeout feature.
+
+
+## Learn More & Supporting Documentation
+
+- [LoRa-E5 AT Command Specification](https://files.seeedstudio.com/products/317990687/res/LoRa-E5%20AT%20Command%20Specification_V1.0%20.pdf)
+- [RAK2287 Quick Start Guide](https://docs.rakwireless.com/Product-Categories/WisLink/RAK2287/Quickstart/)
+- [Summer 2022 Student Research](https://github.com/waggle-sensor/summer2022/blob/main/Tsai/Documentation.md)
+- [Wes-Chirpstack](https://github.com/waggle-sensor/waggle-edge-stack/tree/main/kubernetes/wes-chirpstack)
+- [Chirpstack Documentation](https://www.chirpstack.io/docs/index.html)
+- [Minicom Documentation](https://linux.die.net/man/1/minicom)
+
