@@ -23,7 +23,55 @@ The [Waggle Edge Stack (WES)](https://github.com/waggle-sensor/waggle-edge-stack
 
 ## Setting up RAK Discover Kit 2 to be discoverable by WES
 
+To allow the RAK Discover Kit 2 to be detected by WES, you need to ensure that the device can establish communication with the node. Here are the steps to follow in order to achieve this:
 
+1) Refer to the [Quick Start Guide](https://docs.rakwireless.com/Product-Categories/WisLink/RAK2287/Quickstart), to ssh into the gateway
+- Default username: `pi`
+- Default password: `raspberry`
+2) Assuming you have successfully logged into your gateway using SSH. Enter the following command in the command line: `sudo gateway-config`
+3) Set eth0 ip address to the same network as the node and set eth0 gateway ip to the NX's ip address, refer to [Connect through Ethernet](https://docs.rakwireless.com/Product-Categories/WisLink/RAK2287/Quickstart/#connect-through-ethernet) on how to do so.
+- For example if the node's ip address is 10.31.81.50, then change the eth0 ip address to 10.31.81.51
+- The NX's ip address always ends with 1, so based on the example above the NX's ip address will be 10.31.81.1
+4) Add the node's NX IP address as a DNS server to the gateway, to do so add the IP address to RPI's `/etc/resolv.conf`
+5) Enable Linux's memory controller, to do so change `/boot/cmdline.txt` from:
+```
+console=tty1 root=PARTUUID=24e4d811-02 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait modules-load=dwc2,g_ether
+```
+to:
+```
+console=tty1 root=PARTUUID=24e4d811-02 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait modules-load=dwc2,g_ether cgroup_memory=1 cgroup_enable=memory
+```
+6) Join the K3s cluster, to do so run this in the command line
+```
+MACLower=$(sed s/://g /sys/class/net/eth0/address)
+MAC=${MACLower^^}
+MACFULL=$(printf "0000%5s\n" "$MAC")
+hostname=$(cat /etc/hostname)
+
+export K3S_URL=https://10.31.81.1:6443
+export K3S_TOKEN=4tX0DUZ0uQknRtVUAKjt
+export K3S_NODE_NAME=$MACFULL.$hostname
+
+curl -sfL https://get.k3s.io | sh
+```
+7) Configure the local Docker registry access, to do so run this in the command line
+```
+echo "Configure local Docker registery access" | xargs -L 1 echo `date +'[%Y-%m-%d %H:%M:%S]'` >> /etc/rc.local.logs
+mkdir -p /etc/docker/certs.d/10.31.81.1\:5000/
+cp /etc/waggle/docker/certs/domain.crt /etc/docker/certs.d/10.31.81.1\:5000/
+mkdir -p /usr/local/share/ca-certificates
+cp /etc/waggle/docker/certs/domain.crt /usr/local/share/ca-certificates/docker.crt
+update-ca-certificates
+```
+8) After doing the above steps, the gateway should now be discoverable by WES. It should be named `rak-gateway`. If the gateway is not appearing restart the rpi.
+```
+root@ws-nxcore-000048B02D0766BE:~# sudo kubectl get node
+NAME                           STATUS     ROLES                  AGE   VERSION
+000048b02d0766cd.ws-nxagent    NotReady   <none>                 24d   v1.25.4+k3s1
+0000dca632a306b4.ws-rpi        NotReady   <none>                 24d   v1.25.4+k3s1
+000048b02d0766be.ws-nxcore     Ready      control-plane,master   24d   v1.25.4+k3s1
+0000e45f01384120.rak-gateway   Ready      <none>                 11s   v1.25.7+k3s1 << look for something like this
+```
 
 ## Enabling WES access to the RAK concentrator
 
@@ -231,7 +279,7 @@ You will then be presented with a dashboard for the device where you can check t
 
 To connect the LoRa End device one must change the mode to OTAA, configure the device with the 'Application key', and join the network. Refer to your device's manual on how to do so.
 
-If you are using a Lora E5 Mini, this can be done using the at command `at+mode=lwotaa` to change the mode to OTAA. Then `at+key=appskey, {16 bytes length key}`. {16 bytes length key} being the application key to configure the application key. `at+join` to join the network. All these at commands can be sent using minicom, refer to [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom).
+If you are using a Lora E5 Mini, this can be done using the at command `at+mode=lwotaa` to change the mode to OTAA. Then `at+key=appskey, {16 bytes length key}`. {16 bytes length key} being the application key to configure the application key. `at+join` to join the network. All these at commands can be sent using minicom, refer to [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom). You might also need to change the channel of the device to the channels supported in the region. In the US, this can be done using the command `at+ch=NUM,8-15`.
 
 Once that is configured, the device should join the network and send an event to chirpstack viewable in the `Events` tab.
 
