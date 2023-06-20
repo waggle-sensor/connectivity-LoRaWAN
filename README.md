@@ -19,7 +19,7 @@ The [Waggle Edge Stack (WES)](https://github.com/waggle-sensor/waggle-edge-stack
   - [Adding Custom Device Profiles](#adding-custom-device-profiles)
     - [Add the 'ABP' device profile](#add-the-abp-device-profile)
     - [Add the 'OTAA' device profile](#add-the-otaa-device-profile)
-    - [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom)
+  - [Accessing LoRa End Device via Minicom](#accessing-lora-end-device-via-minicom)
 
 ## Setting up RAK Discover Kit 2 to be discoverable by WES
 
@@ -379,7 +379,7 @@ Click the 'Submit' button.
 
 ![](_images/15_otaa_profile_done.png)
 
-### Accessing LoRa End Device via Minicom
+## Accessing LoRa End Device via Minicom
 
 1) To connect to your LoRa End Device, you have to first connect your LoRa End Device to your personal device via a cable.
 
