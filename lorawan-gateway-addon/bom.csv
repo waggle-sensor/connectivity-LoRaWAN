@@ -1,20 +1,20 @@
-Item #,Name,Source,Price
-1, RAK2287 Gateway Concentrator Module / SPI with GPS / US915, https://store.rakwireless.com/products/wislink-concentrator-module-sx1302-rak2287-lorawan?variant=39661994868934, $89
-2, RAK2287/RAK5146 Pi HAT, https://store.rakwireless.com/products/rak2287-pi-hat, $19
-3, Fiberglass Antenna 5.8dBi / N-Type to iPEX / 902MHz-928MHz, https://store.rakwireless.com/products/5-8dbi-fiber-glass-antenna?variant=39942855033030, $40
-4, RPI 4, https://www.amazon.com/Raspberry-Pi-Computer-Suitable-Workstation/dp/B0899VXM8F, $77
-5, uSD, https://www.amazon.com/SanDisk-4-Pack-Outdoors-microSDHC-Adapter/dp/B0CP4P4268/, $9
-6, POE Splitter, https://www.amazon.com/DSLRKIT-Gigabit-Ethernet-Active-Splitter/dp/B07W6KM59K/, $13
-7, USB C Cable, https://www.amazon.com/SUNGUY-2-Pack-Charging-Samsung-OnePlus/dp/B07H95NY5Y/, $3.50
-8, 3ft CAT6 cable, https://www.amazon.com/Cable-Matters-5-Pack-Snagless-Ethernet/dp/B00C2CBBAM/, $2.50
-9, Grommet, https://www.amazon.com/Aifeier-Rubber-Grommets-Protection-Firewall/dp/B0B5YGZFFF/, $2
-10, Screws, MCMaster, $0.40
-11, Nuts, MCMaster, $0.40
-12, Washer, MCMaster, $0.40
-13, RPI Base, https://www.amazon.com/C4-Labs-Zebra-Mounting-Plate/dp/B011JAC3UO/, $10
-14, Double Sided Tape, Surya, $0.30
-15, Zipties, Surya, $0.30
-16, Legs, find from node, $5
-17, Legs - fastners, find from node, $1
-18, Leg lock washer, find from node, $1
-19, LoRaWAN Base Plate, Surya P/N 3200-1390-50, $8.35
+Item #,Name,Source, Quantity
+1, RAK2287 Gateway Concentrator Module / SPI with GPS / US915, https://store.rakwireless.com/products/wislink-concentrator-module-sx1302-rak2287-lorawan?variant=39661994868934, 1
+2, RAK2287/RAK5146 Pi HAT, https://store.rakwireless.com/products/rak2287-pi-hat, 1
+3, Fiberglass Antenna 5.8dBi / N-Type to iPEX / 902MHz-928MHz, https://store.rakwireless.com/products/5-8dbi-fiber-glass-antenna?variant=39942855033030, 1
+4, RPI 4, https://www.amazon.com/Raspberry-Pi-Computer-Suitable-Workstation/dp/B0899VXM8F, 1
+5, uSD, https://www.amazon.com/SanDisk-4-Pack-Outdoors-microSDHC-Adapter/dp/B0CP4P4268/, 1
+6, POE Splitter, https://www.amazon.com/DSLRKIT-Gigabit-Ethernet-Active-Splitter/dp/B07W6KM59K/, 1
+7, USB C Cable, https://www.amazon.com/SUNGUY-2-Pack-Charging-Samsung-OnePlus/dp/B07H95NY5Y/, 1
+8, 3ft CAT6 cable, https://www.amazon.com/Cable-Matters-5-Pack-Snagless-Ethernet/dp/B00C2CBBAM/, 1
+9, Grommet, https://www.amazon.com/Aifeier-Rubber-Grommets-Protection-Firewall/dp/B0B5YGZFFF/, 1
+10, Screws, https://www.mcmaster.com/91772A150/, 4
+11, Nuts, https://www.mcmaster.com/93776A370/, 4
+12, Leg Lock Washer, https://www.mcmaster.com/92146A030/, 2
+13, RPI Base, https://www.amazon.com/C4-Labs-Zebra-Mounting-Plate/dp/B011JAC3UO/, 1
+14, Double Sided Tape, Surya, 2in
+15, Zipties, Surya, 3
+16, Legs, https://www.amazon.com/Stainless-Mounting-Brackets-Flared-Washer/dp/B073VX2LJQ, 2
+17, Legs Screw, https://www.mcmaster.com/92240A578/, 2
+18, Leg Flat washer, https://www.mcmaster.com/92141A030/, $1
+19, LoRaWAN Base Plate, Surya P/N 3200-1390-50, 1
